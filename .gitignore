@@ -1,0 +1,7 @@
+*.sln
+*.json
+.vs
+x64
+Debug
+*.vcxproj*
+input*.*
