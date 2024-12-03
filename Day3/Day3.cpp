@@ -8,6 +8,7 @@ std::ifstream fin("input.txt");
 typedef std::vector<std::string> data;
 
 void part1(data);
+void part2(data);
 
 int main()
 {
@@ -20,6 +21,7 @@ int main()
 
 	part1(input);
 	std::cout << "\n";
+	part2(input);
 }
 
 int multiply(const std::smatch &pMatch) {
@@ -40,4 +42,30 @@ void part1(data pInput) {
 	}
 
 	std::cout << "part 1: " << sum;
+}
+
+void part2(data pInput) {
+	int sum = 0;
+
+	std::regex matcher("do\\(\\)|don't\\(\\)|mul\\(([0-9]+), ?([0-9]+)\\)");
+	std::smatch match;
+
+	bool enabled = true;
+
+	for (std::string line : pInput) {
+		while (std::regex_search(line, match, matcher)) {
+			if (match[0] == "do()") {
+				enabled = true;
+			}
+			else if (match[0] == "don't()") {
+				enabled = false;
+			}
+			else {
+				sum += enabled * multiply(match);
+			}
+			line = match.suffix().str();
+		}
+	}
+
+	std::cout << "part 2: " << sum;
 }
