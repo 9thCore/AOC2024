@@ -31,7 +31,7 @@ int multiply(const std::smatch &pMatch) {
 void part1(data pInput) {
 	int sum = 0;
 
-	std::regex matcher("mul\\(([0-9]+), ?([0-9]+)\\)");
+	std::regex matcher(R"(mul\(([0-9]{1,3}), ?([0-9]{1,3})\))");
 	std::smatch match;
 
 	for (std::string line : pInput) {
@@ -47,7 +47,7 @@ void part1(data pInput) {
 void part2(data pInput) {
 	int sum = 0;
 
-	std::regex matcher("do\\(\\)|don't\\(\\)|mul\\(([0-9]+), ?([0-9]+)\\)");
+	std::regex matcher(R"(do\(\)|don't\(\)|mul\(([0-9]{1,3}), ?([0-9]{1,3})\))");
 	std::smatch match;
 
 	bool enabled = true;
