@@ -21,6 +21,7 @@ struct cell {
 typedef std::vector<std::vector<cell>> data;
 
 void part1(data);
+void part2(const data &);
 
 int main()
 {
@@ -37,6 +38,7 @@ int main()
 
 	part1(input);
 	std::cout << "\n";
+	part2(input);
 }
 
 void propagate_xmas_word(data &pData, int pI, int pJ, int pDeltaI, int pDeltaJ) {
@@ -96,4 +98,34 @@ void part1(data pData) {
 	}
 
 	std::cout << "part 1: " << count;
+}
+
+bool crossmas(const data &pData, int pI, int pJ, int pDeltaI, int pDeltaJ) {
+	return pData[pI + pDeltaI][pJ + pDeltaJ].ch == 'M' && pData[pI - pDeltaI][pJ - pDeltaJ].ch == 'S';
+}
+
+bool crossmas(const data &pData, int pI, int pJ) {
+	bool topLeft = crossmas(pData, pI, pJ, -1, -1);
+	bool topRight = crossmas(pData, pI, pJ, -1, 1);
+	bool bottomLeft = crossmas(pData, pI, pJ, 1, -1);
+	bool bottomRight = crossmas(pData, pI, pJ, 1, 1);
+
+	return (topLeft && topRight)
+		|| (topRight && bottomRight)
+		|| (bottomRight && bottomLeft)
+		|| (bottomLeft && topLeft);
+}
+
+void part2(const data &pData) {
+	int count = 0;
+
+	for (int i = 1; i < pData.size() - 1; i++) {
+		for (int j = 1; j < pData[i].size() - 1; j++) {
+			if (pData[i][j].ch == 'A' && crossmas(pData, i, j)) {
+				count++;
+			}
+		}
+	}
+
+	std::cout << "part 2: " << count;
 }
