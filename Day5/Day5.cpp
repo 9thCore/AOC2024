@@ -5,6 +5,7 @@
 #include <regex>
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 std::ifstream fin("input.txt");
 
 // lol
@@ -16,6 +17,7 @@ typedef std::vector<int> printingOrder;
 typedef std::vector<printingOrder> allPrintingOrders;
 
 void part1(const pageOrder &, const allPrintingOrders &);
+void part2(const pageOrder &, allPrintingOrders);
 
 int main()
 {
@@ -51,6 +53,7 @@ int main()
 
 	part1(pageData, printData);
 	std::cout << "\n";
+	part2(pageData, printData);
 }
 
 bool rightOrderPrint(const pageOrder &pPageOrder, const printingOrder &pPrintingOrder) {
@@ -80,4 +83,42 @@ void part1(const pageOrder &pPageOrder, const allPrintingOrders &pPrintingOrders
 	}
 
 	std::cout << "part 1: " << sum;
+}
+
+bool findBadOrder(const pageOrder &pPageOrder, const printingOrder &pPrintingOrder, int &pFormerErronousIndex, int &pLatterErronousIndex) {
+	std::unordered_map<int, int> previousValues;
+
+	int idx = 0;
+	for (const int &value : pPrintingOrder) {
+		for (int i = 0; i < MAX_PAGE; i++) {
+			// see comment in rightOrderPrint
+			if (pPageOrder[value][i] && previousValues.find(i) != previousValues.end()) {
+				pFormerErronousIndex = previousValues[i];
+				pLatterErronousIndex = idx;
+				return true;
+			}
+		}
+
+		previousValues[value] = idx;
+		idx++;
+	}
+	
+	return false;
+}
+
+void part2(const pageOrder &pPageOrder, allPrintingOrders pPrintingOrders) {
+	int sum = 0;
+
+	for (auto &line : pPrintingOrders) {
+		int formerIdx = -1, latterIdx = -1;
+		while (findBadOrder(pPageOrder, line, formerIdx, latterIdx)) {
+			std::swap(line[formerIdx], line[latterIdx]);
+		}
+
+		if (formerIdx != -1 && latterIdx != -1) {
+			sum += line[line.size() / 2];
+		}
+	}
+
+	std::cout << "part 2: " << sum;
 }
