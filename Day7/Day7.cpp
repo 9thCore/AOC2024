@@ -11,6 +11,7 @@ typedef std::pair<long long, std::vector<long long>> equation;
 typedef std::vector<equation> data;
 
 void part1(const data &);
+void part2(const data &);
 
 int main()
 {
@@ -39,11 +40,13 @@ int main()
 
 	part1(input);
 	std::cout << "\n";
+	part2(input);
 }
 
 enum allowed_operators {
 	ADDITION = 1,
-	MULTIPLICATION = 2
+	MULTIPLICATION = 2,
+	CONCATENATION = 4
 };
 
 bool explore_possibilities(const equation &pEquation, allowed_operators pOp, int pI, long long pRunningTotal) {
@@ -52,6 +55,20 @@ bool explore_possibilities(const equation &pEquation, allowed_operators pOp, int
 	}
 
 	long long value = pEquation.second[pI];
+
+	if (pOp & CONCATENATION) {
+		long long valueCopy = value;
+		long long runningTotalCopy = pRunningTotal;
+
+		while (runningTotalCopy && valueCopy && runningTotalCopy % 10 == valueCopy % 10) {
+			runningTotalCopy /= 10;
+			valueCopy /= 10;
+		}
+
+		if (valueCopy == 0 && explore_possibilities(pEquation, pOp, pI - 1, runningTotalCopy)) {
+			return true;
+		}
+	}
 
 	if (pOp & MULTIPLICATION) {
 		if (pRunningTotal % value == 0 && explore_possibilities(pEquation, pOp, pI - 1, pRunningTotal / value)) {
@@ -75,6 +92,16 @@ void part1(const data &pInput) {
 
 	for (const equation &equation : pInput) {
 		sum += explore_possibilities(equation, (allowed_operators)(ADDITION | MULTIPLICATION)) * equation.first;
+	}
+
+	std::cout << "part 1: " << sum;
+}
+
+void part2(const data &pInput) {
+	long long sum = 0;
+
+	for (const equation &equation : pInput) {
+		sum += explore_possibilities(equation, (allowed_operators)(ADDITION | MULTIPLICATION | CONCATENATION)) * equation.first;
 	}
 
 	std::cout << "part 1: " << sum;
