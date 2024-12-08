@@ -16,6 +16,7 @@ typedef std::vector<std::string> lines;
 int hash(char);
 
 void part1(const data &, const lines &);
+void part2(const data &, const lines &);
 
 int main()
 {
@@ -38,17 +39,26 @@ int main()
 
 	part1(input, storage);
 	std::cout << "\n";
+	part2(input, storage);
 }
 
-bool set(grid &pGrid, bool value, int n, int m, int i, int j) {
+bool set(grid &pGrid, bool value, int n, int m, int i, int j, bool &outOfRange) {
 	if (i < 0 || i >= n
 		|| j < 0 || j >= m) {
+		outOfRange = true;
 		return false;
 	}
+
+	outOfRange = false;
 
 	bool old = pGrid[i][j];
 	pGrid[i][j] = value;
 	return old != value;
+}
+
+bool set(grid &pGrid, int pValue, int pN, int pM, int pI, int pJ) {
+	bool dummy;
+	return set(pGrid, pValue, pN, pM, pI, pJ, dummy);
 }
 
 int count_matching(const data &pInput, int n, int m, std::function<int(position, position)> counter) {
@@ -91,6 +101,23 @@ void part1(const data &pInput, const lines &pLines) {
 
 	std::cout << "part 1: " << count_matching(pInput, n, m, [&](position start, position delta) {
 		return set(unique, 1, n, m, std::get<0>(start) + std::get<0>(delta), std::get<1>(start) + std::get<1>(delta));
+		});
+}
+
+void part2(const data &pInput, const lines &pLines) {
+	int n = pLines.size(), m = pLines[0].size();
+	grid unique = { {0} };
+
+	std::cout << "part 2: " << count_matching(pInput, n, m, [&](position start, position delta) {
+		int count = 0;
+		bool outOfRange = false;
+
+		while (!outOfRange) {
+			count += set(unique, 1, n, m, std::get<0>(start), std::get<1>(start), outOfRange);
+			start = { std::get<0>(start) + std::get<0>(delta), std::get<1>(start) + std::get<1>(delta) };
+		}
+
+		return count;
 		});
 }
 
