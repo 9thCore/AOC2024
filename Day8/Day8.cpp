@@ -4,6 +4,7 @@
 #include <array>
 #include <vector>
 #include <tuple>
+#include <functional>
 std::ifstream fin("input.txt");
 
 typedef std::tuple<int, int> position;
@@ -50,10 +51,8 @@ bool set(grid &pGrid, bool value, int n, int m, int i, int j) {
 	return old != value;
 }
 
-void part1(const data &pInput, const lines &pLines) {
+int count_matching(const data &pInput, int n, int m, std::function<int(position, position)> counter) {
 	int count = 0;
-	grid unique = { {0} };
-	int n = pLines.size(), m = pLines[0].size();
 
 	for (const positions &pos : pInput) {
 		for (int i = 0; i < pos.size(); i++) {
@@ -70,20 +69,29 @@ void part1(const data &pInput, const lines &pLines) {
 				// |1 |           |1|
 				// | 2|, |1 2| or |2|
 				if (iDiff * jDiff >= 0) {
-					count += set(unique, 1, n, m, minI - std::abs(iDiff), minJ - std::abs(jDiff));
-					count += set(unique, 1, n, m, maxI + std::abs(iDiff), maxJ + std::abs(jDiff));
+					count += counter(position(minI, minJ), position(-std::abs(iDiff), -std::abs(jDiff)));
+					count += counter(position(maxI, maxJ), position(std::abs(iDiff), std::abs(jDiff)));
 				}
 				else {
 					// | 1|
 					// |2 |
-					count += set(unique, 1, n, m, minI - std::abs(iDiff), maxJ + std::abs(jDiff));
-					count += set(unique, 1, n, m, maxI + std::abs(iDiff), minJ - std::abs(jDiff));
+					count += counter(position(minI, maxJ), position(-std::abs(iDiff), std::abs(jDiff)));
+					count += counter(position(maxI, minJ), position(std::abs(iDiff), -std::abs(jDiff)));
 				}
 			}
 		}
 	}
 
-	std::cout << "part 1: " << count;
+	return count;
+}
+
+void part1(const data &pInput, const lines &pLines) {
+	int n = pLines.size(), m = pLines[0].size();
+	grid unique = { {0} };
+
+	std::cout << "part 1: " << count_matching(pInput, n, m, [&](position start, position delta) {
+		return set(unique, 1, n, m, std::get<0>(start) + std::get<0>(delta), std::get<1>(start) + std::get<1>(delta));
+		});
 }
 
 int hash(char pCh) {
