@@ -23,6 +23,7 @@ typedef std::vector<memblock> data;
 
 void print(const data &);
 void part1(data);
+void part2(data);
 
 int main()
 {
@@ -46,8 +47,10 @@ int main()
 
 	part1(input);
 	std::cout << "\n";
+	part2(input);
 }
 
+// debug functionality
 void print(const data &pInput) {
 	for (auto iterator = pInput.cbegin(), end = pInput.cend(); iterator != end; iterator++) {
 		const memblock &block = *iterator;
@@ -64,19 +67,23 @@ void print(const data &pInput) {
 	}
 }
 
-bool find_free_space(const data &pInput, int &pFreeSpacePos, int &pIndex) {
+bool find_free_space(const data &pInput, int pLength, int &pFreeSpacePos, int &pIndex) {
 	int guess = 0;
-	for (int i = 0; i < pInput.size(); i++) {
-		const memblock &block = pInput[i];
-		if (guess < block.start) {
-			pFreeSpacePos = guess;
-			pIndex = i;
+	for (int i = 0; i < pInput.size() - 1; i++) {
+		const memblock &prev = pInput[i];
+		const memblock &next = pInput[i + 1];
+		int nextFree = prev.start + prev.length;
+		if (next.start - nextFree >= pLength) {
+			pFreeSpacePos = nextFree;
+			pIndex = i + 1;
 			return true;
-		}else if (guess >= block.start && guess < block.start + block.length) {
-			guess += block.length;
 		}
 	}
 	return false;
+}
+
+bool find_free_space(const data &pInput, int &pFreeSpacePos, int &pIndex) {
+	return find_free_space(pInput, 1, pFreeSpacePos, pIndex);
 }
 
 void part1(data pInput) {
@@ -113,4 +120,51 @@ void part1(data pInput) {
 	}
 
 	std::cout << "part 1: " << sum;
+}
+
+void part2(data pInput) {
+	int fileID = pInput.back().id;
+	
+	// preprocessing
+	int freeSpace, insertIndex;
+	while (fileID > 0) {
+		int blockIndex = -1;
+		for (int i = 0; i < pInput.size(); i++) {
+			if (pInput[i].id == fileID) {
+				blockIndex = i;
+				break;
+			}
+		}
+
+		if (blockIndex < 0) {
+			std::cout << "???";
+			exit(1);
+		}
+
+		memblock &block = pInput[blockIndex];
+
+		if (find_free_space(pInput, block.length, freeSpace, insertIndex)) {
+			if (insertIndex == blockIndex) {
+				block.start = freeSpace;
+			} else if (insertIndex < blockIndex) {
+				memblock copy = { block.id, freeSpace, block.length };
+				pInput.erase(pInput.begin() + blockIndex);
+				pInput.insert(pInput.begin() + insertIndex, copy);
+			}
+			else {
+				fileID--;
+			}
+		}
+		else {
+			fileID--;
+		}
+	}
+
+	long long sum = 0;
+	for (const auto &block : pInput) {
+		// same reason as part 1
+		sum += (long long)(block.start * 2 + block.length - 1) * block.length * block.id / 2;
+	}
+
+	std::cout << "part 2: " << sum;
 }
