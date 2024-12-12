@@ -8,41 +8,42 @@ std::ifstream fin("input.txt");
 
 const int DELTA[][2] = { {-1, 0}, {0, 1}, {1, 0}, {0, -1} };
 
+typedef std::vector<std::vector<char>> map;
+
+void part1(const map &);
+
+int main()
+{
+	map regionMap;
+
+	std::string line;
+
+	while (std::getline(fin, line)) {
+		regionMap.emplace_back();
+
+		for (const char ch : line) {
+			regionMap.back().push_back(ch);
+		}
+	}
+
+	part1(regionMap);
+	std::cout << "\n";
+}
+
 struct region {
 	long long area, perimeter;
 };
 
 typedef std::vector<region> data;
-typedef std::vector<std::vector<char>> map;
 
-void part1(const data &);
 void process(const map &, data &);
-
-int main()
-{
+void part1(const map &pMap) {
 	data input;
-	map unprocessedMap;
+	process(pMap, input);
 
-	std::string line;
-
-	while (std::getline(fin, line)) {
-		unprocessedMap.emplace_back();
-
-		for (const char ch : line) {
-			unprocessedMap.back().push_back(ch);
-		}
-	}
-
-	process(unprocessedMap, input);
-
-	part1(input);
-	std::cout << "\n";
-}
-
-void part1(const data &pInput) {
 	long long sum = 0;
 
-	for (const auto &region : pInput) {
+	for (const auto &region : input) {
 		sum += region.area * region.perimeter;
 	}
 
