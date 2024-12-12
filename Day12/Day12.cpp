@@ -8,13 +8,21 @@ std::ifstream fin("input.txt");
 
 const int DELTA[][2] = { {-1, 0}, {0, 1}, {1, 0}, {0, -1} };
 
-typedef std::vector<std::vector<char>> map;
+struct region {
+	long long area, perimeter, sides;
+};
 
-void part1(const map &);
+typedef std::vector<region> data;
+typedef std::vector<std::vector<short>> map;
+
+void process(const map &, data &);
+void part1(const map &, const data &);
+void part2(const map &, const data &);
 
 int main()
 {
 	map regionMap;
+	data input;
 
 	std::string line;
 
@@ -26,39 +34,51 @@ int main()
 		}
 	}
 
-	part1(regionMap);
+	process(regionMap, input);
+	part1(regionMap, input);
 	std::cout << "\n";
+	part2(regionMap, input);
 }
 
-struct region {
-	long long area, perimeter;
-};
-
-typedef std::vector<region> data;
-
-void process(const map &, data &);
-void part1(const map &pMap) {
-	data input;
-	process(pMap, input);
-
+void part2(const map &pMap, const data &pInput) {
 	long long sum = 0;
 
-	for (const auto &region : input) {
+	for (const auto &region : pInput) {
+		sum += region.area * region.sides;
+	}
+
+	std::cout << "part 2: " << sum;
+}
+
+void part1(const map &pMap, const data &pInput) {
+	long long sum = 0;
+
+	for (const auto &region : pInput) {
 		sum += region.area * region.perimeter;
 	}
 
 	std::cout << "part 1: " << sum;
 }
 
+long long calculate_sides(const map &, int);
+
 void bfs(const map &pMap, map &pExplored, data &pInput, int pOriginI, int pOriginJ) {
-	char match = pMap[pOriginI][pOriginJ];
+	short match = pMap[pOriginI][pOriginJ];
 
 	pInput.emplace_back();
 	pInput.back().area = 1;
+	pInput.back().sides = 0;
+
+	map explored;
+	explored.resize(pMap.size());
+	for (int i = 0; i < pMap.size(); i++) {
+		explored[i].resize(pMap[i].size());
+	}
 
 	std::queue<std::tuple<int, int>> queue;
 	queue.emplace(pOriginI, pOriginJ);
 	pExplored[pOriginI][pOriginJ] = 1;
+	explored[pOriginI][pOriginJ] = 1;
 
 	while (!queue.empty()) {
 		int i = std::get<0>(queue.front()), j = std::get<1>(queue.front());
@@ -84,12 +104,15 @@ void bfs(const map &pMap, map &pExplored, data &pInput, int pOriginI, int pOrigi
 
 			queue.emplace(newI, newJ);
 			pExplored[newI][newJ] = 1;
+			explored[newI][newJ] = 1;
 			pInput.back().area++;
 			pInput.back().perimeter--;
 		}
 	}
 
-
+	for (int dir = 0; dir < 4; dir++) {
+		pInput.back().sides += calculate_sides(explored, dir);
+	}
 }
 
 void process(const map &pMap, data &pInput) {
@@ -107,4 +130,47 @@ void process(const map &pMap, data &pInput) {
 			}
 		}
 	}
+}
+
+long long calculate_sides(const map &pExplored, int pDir) {
+	long long count = 0;
+
+	if (pDir % 2 == 0) {
+		for (int i = 0; i < pExplored.size(); i++) {
+			for (int j = 0; j < pExplored[i].size(); j++) {
+				if (!pExplored[i][j]) {
+					continue;
+				}
+
+				int offsetI = i + DELTA[pDir][0];
+				bool outside = offsetI < 0 || offsetI >= pExplored.size();
+				if (outside || !pExplored[offsetI][j]) {
+					count++;
+					while (j < pExplored[i].size() && pExplored[i][j] && (outside || !pExplored[offsetI][j])) {
+						j++;
+					}
+				}
+			}
+		}
+	}
+	else {
+		for (int j = 0; j < pExplored[0].size(); j++) {
+			for (int i = 0; i < pExplored.size(); i++) {
+				if (!pExplored[i][j]) {
+					continue;
+				}
+
+				int offsetJ = j + DELTA[pDir][1];
+				bool outside = offsetJ < 0 || offsetJ >= pExplored[0].size();
+				if (outside || !pExplored[i][offsetJ]) {
+					count++;
+					while (i < pExplored.size() && pExplored[i][j] && (outside || !pExplored[i][offsetJ])) {
+						i++;
+					}
+				}
+			}
+		}
+	}
+
+	return count;
 }
