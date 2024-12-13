@@ -19,6 +19,7 @@ struct machine {
 typedef std::vector<machine> data;
 
 void part1(const data &);
+void part2(data);
 
 int main()
 {
@@ -50,8 +51,10 @@ int main()
 
 	part1(input);
 	std::cout << "\n";
+	part2(input);
 }
 
+// i thought i could reuse this for part 2 lol
 num calculate_sum(const data &pInput) {
 	num sum = 0;
 
@@ -85,4 +88,39 @@ num calculate_sum(const data &pInput) {
 
 void part1(const data &pInput) {
 	std::cout << "part 1: " << calculate_sum(pInput);
+}
+
+void part2(data pInput) {
+	num sum = 0;
+
+	for (auto &arcade : pInput) {
+		arcade.prize.x += 10000000000000;
+		arcade.prize.y += 10000000000000;
+
+		// timesB (number of times to push B) = (XaYp - YaXp) / (XaYb - YaXb)
+		// where: Xa, Ya -> delta of an A push
+		// Xp, Yp -> prize x/y pos
+		// Xb, Ya -> delta of a B push
+
+		num timesBNumerator = arcade.aDelta.x * arcade.prize.y - arcade.aDelta.y * arcade.prize.x;
+		num timesBDenominator = arcade.aDelta.x * arcade.bDelta.y - arcade.aDelta.y * arcade.bDelta.x;
+
+		if (timesBNumerator % timesBDenominator != 0) {
+			continue;
+		}
+
+		num bPush = timesBNumerator / timesBDenominator;
+		num remainderX = arcade.prize.x - bPush * arcade.bDelta.x;
+		num remainderY = arcade.prize.y - bPush * arcade.bDelta.y;
+
+		if (remainderX % arcade.aDelta.x != 0 || remainderY % arcade.aDelta.y != 0
+			|| remainderX / arcade.aDelta.x != remainderY / arcade.aDelta.y) {
+			continue;
+		}
+
+		num aPush = remainderX / arcade.aDelta.x;
+		sum += aPush * 3 + bPush;
+	}
+
+	std::cout << "part 2: " << sum;
 }
