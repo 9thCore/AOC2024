@@ -47,7 +47,7 @@ int main()
     part2(input);
 }
 
-void print(const data &pInput) {
+void print(const data &pInput, std::ostream &pOut = std::cout, char pDefault = '.') {
     for (int i = 0; i < PLAYABLE_AREA.i; i++) {
         for (int j = 0; j < PLAYABLE_AREA.j; j++) {
             int cnt = 0;
@@ -57,13 +57,13 @@ void print(const data &pInput) {
                 }
             }
             if (cnt) {
-                std::cout << cnt;
+                pOut << cnt;
             }
             else {
-                std::cout << '.';
+                pOut << pDefault;
             }
         }
-        std::cout << "\n";
+        pOut << "\n";
     }
 }
 
@@ -110,5 +110,20 @@ void part1(data pInput) {
 }
 
 void part2(data pInput) {
-    // dummy
+    std::ofstream fout("output.txt");
+
+    int i = 0;
+    while (i++ < 10000) {
+        for (auto &robot : pInput) {
+            robot.position.i = constrain(robot.position.i + robot.velocity.i, PLAYABLE_AREA.i);
+            robot.position.j = constrain(robot.position.j + robot.velocity.j, PLAYABLE_AREA.j);
+        }
+
+        fout << "Step: " << i << "\n";
+        print(pInput, fout, ' ');
+        fout << "\n\n\n\n\n\n\n\n";
+    }
+    
+    fout << "part 2: idk lol go figure it out";
+    // all manual this go around!
 }
