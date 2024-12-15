@@ -3,9 +3,8 @@
 #include <string>
 #include <regex>
 #include <vector>
+#include <sstream>
 std::ifstream fin("input.txt");
-
-const int DELTA[][2] = { {-1, 0}, {0, 1}, {1, 0}, {0, -1} };
 
 typedef long long num;
 
@@ -23,7 +22,7 @@ struct data {
 };
 
 void part1(data);
-void part2(data);
+void part2(const data &);
 
 int main()
 {
@@ -74,19 +73,52 @@ int main()
     part2(input);
 }
 
-bool resolve_movement(map &pMap, point &pMover, const point &pDelta) {
+bool resolve_movement(map &pMap, point &pMover, const point &pDelta, bool pSimulate = false) {
     point nextPos = { pMover.i + pDelta.i, pMover.j + pDelta.j };
     point box = nextPos;
     char &ch = pMap[nextPos.i][nextPos.j];
+    bool vertical = pDelta.i != 0;
+    bool pushingBigBox = (ch == '[' || ch == ']');
     if (ch == '.') {
-        pMover = nextPos;
+        if (!pSimulate) {
+            pMover = nextPos;
+        }
         return true;
     }
     else if (ch == 'O' && resolve_movement(pMap, box, pDelta)) {
-        ch = '.';
-        pMap[box.i][box.j] = 'O';
-        pMover = nextPos;
+        if (!pSimulate) {
+            ch = '.';
+            pMap[box.i][box.j] = 'O';
+            pMover = nextPos;
+        }
         return true;
+    }
+    else if (pushingBigBox) {
+        bool leftSide = (ch == '[');
+        if (!vertical && resolve_movement(pMap, box, pDelta)) {
+            if (!pSimulate) {
+                pMap[box.i][box.j] = ch;
+                ch = '.';
+                pMover = nextPos;
+            }
+            return true;
+        }
+        else if (vertical) {
+            point otherSide = { box.i, box.j + (leftSide ? 1 : -1) };
+            char &ch2 = pMap[otherSide.i][otherSide.j];
+            if (resolve_movement(pMap, box, pDelta, true) && resolve_movement(pMap, otherSide, pDelta, true)) {
+                if (!pSimulate) {
+                    resolve_movement(pMap, box, pDelta);
+                    resolve_movement(pMap, otherSide, pDelta);
+                    pMap[box.i][box.j] = ch;
+                    pMap[otherSide.i][otherSide.j] = ch2;
+                    ch = '.';
+                    ch2 = '.';
+                    pMover = nextPos;
+                }
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -95,7 +127,7 @@ bool resolve_player_movement(data &pInput, const point &pDelta) {
     return resolve_movement(pInput.mapData, pInput.player, pDelta);
 }
 
-void part1(data pInput) {
+num perform_movement(data &pInput) {
     for (const auto &move : pInput.moveData) {
         resolve_player_movement(pInput, move);
     }
@@ -105,7 +137,7 @@ void part1(data pInput) {
     for (const auto &line : pInput.mapData) {
         num j = 0;
         for (const char &ch : line) {
-            if (ch == 'O') {
+            if (ch == 'O' || ch == '[') {
                 score += i * 100 + j;
             }
             j++;
@@ -113,9 +145,35 @@ void part1(data pInput) {
         i++;
     }
 
-    std::cout << "part 1: " << score;
+    return score;
 }
 
-void part2(data pInput) {
-    // dummy
+void part1(data pInput) {
+    std::cout << "part 1: " << perform_movement(pInput);
+}
+
+void part2(const data &pInput) {
+    data bigData;
+    bigData.player = { pInput.player.i, pInput.player.j * 2 };
+    bigData.moveData = pInput.moveData;
+
+    for (const auto &line : pInput.mapData) {
+        std::ostringstream builder;
+        for (const char &ch : line) {
+            switch (ch) {
+                case '#':
+                    builder << "##";
+                    break;
+                case '.':
+                    builder << "..";
+                    break;
+                case 'O':
+                    builder << "[]";
+                    break;
+            }
+        }
+        bigData.mapData.emplace_back(builder.str());
+    }
+
+    std::cout << "part 2: " << perform_movement(bigData);
 }
