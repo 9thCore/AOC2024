@@ -106,5 +106,14 @@ void part1(data pInput) {
 }
 
 void part2(data pInput) {
-    // dummy
+    for (auto &byte : pInput.byteData) {
+        pInput.mapData[byte.i][byte.j].corrupted = 1;
+
+        if (bfs(pInput) == -1) {
+            std::cout << "part 2: " << byte.i << ',' << byte.j;
+            return;
+        }
+    }
+
+    std::cout << "part2: ???,???";
 }
