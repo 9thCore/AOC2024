@@ -79,6 +79,32 @@ void part1(data pInput) {
     std::cout << "part 1: " << result;
 }
 
+std::unordered_map<std::string, num> cachedPart2Results;
+num arrangement_count(const data &pInput, const data::arrangement &pArrangement) {
+    num sum = 0;
+
+    if (cachedPart2Results.find(pArrangement) != cachedPart2Results.end()) {
+        return cachedPart2Results[pArrangement];
+    }
+
+    for (auto &towel : pInput.towelData) {
+        if (pArrangement == towel) {
+            sum++;
+        }
+        else if (pArrangement.find(towel) == 0) {
+            sum += arrangement_count(pInput, pArrangement.substr(towel.size()));
+        }
+    }
+
+    cachedPart2Results[pArrangement] = sum;
+
+    return sum;
+}
+
 void part2(data pInput) {
-    // dummy
+    num result = 0;
+    for (auto &arrangement : pInput.arrangementData) {
+        result += arrangement_count(pInput, arrangement);
+    }
+    std::cout << "part 2: " << result;
 }
