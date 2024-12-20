@@ -168,10 +168,6 @@ num count_skips_all(const data &pInput, const num maxDist) {
 
     num result = 0;
     for (auto iter = skip_count.begin(); iter != skip_count.end(); iter++) {
-        if (iter->first >= 50) {
-            std::cout << iter->first << ": " << iter->second << "\n";
-        }
-
         if (iter->first >= 100) {
             result += iter->second;
         }
