@@ -98,7 +98,7 @@ void bfs(data &pInput) {
     }
 }
 
-num count_skips(const data &pInput) {
+num count_skips_adjacent(const data &pInput) {
     std::unordered_map<num, num> skip_count;
 
     for (num i = 1; i < pInput.mapData.size() - 1; i++) {
@@ -137,9 +137,50 @@ num count_skips(const data &pInput) {
 
 void part1(data pInput) {
     bfs(pInput);
-    std::cout << "part 1: " << count_skips(pInput);
+    std::cout << "part 1: " << count_skips_adjacent(pInput);
+}
+
+num count_skips_all(const data &pInput, const num maxDist) {
+    std::unordered_map<num, num> skip_count;
+
+    for (num i = 1; i < pInput.mapData.size() - 1; i++) {
+        for (num j = 1; j < pInput.mapData[i].size() - 1; j++) {
+            const cell &first = pInput.mapData[i][j];
+
+            for (num i2 = 1; i2 < pInput.mapData.size() - 1; i2++) {
+                for (num j2 = 1; j2 < pInput.mapData[i2].size() - 1; j2++) {
+                    num dist = std::abs(i2 - i) + std::abs(j2 - j);
+                    if (dist > maxDist) {
+                        continue;
+                    }
+
+                    const cell &second = pInput.mapData[i2][j2];
+
+                    num save = first.cost - second.cost - dist;
+
+                    if (!first.wall && !second.wall && save > 0) {
+                        skip_count[save]++;
+                    }
+                }
+            }
+        }
+    }
+
+    num result = 0;
+    for (auto iter = skip_count.begin(); iter != skip_count.end(); iter++) {
+        if (iter->first >= 50) {
+            std::cout << iter->first << ": " << iter->second << "\n";
+        }
+
+        if (iter->first >= 100) {
+            result += iter->second;
+        }
+    }
+
+    return result;
 }
 
 void part2(data pInput) {
-    // dummy
+    bfs(pInput);
+    std::cout << "part 2: " << count_skips_all(pInput, 20);
 }
