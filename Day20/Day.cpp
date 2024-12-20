@@ -140,6 +140,11 @@ void part1(data pInput) {
     std::cout << "part 1: " << count_skips_adjacent(pInput);
 }
 
+bool valid(const data &pInput, const point &&pPos) {
+    return pPos.i >= 0 && pPos.i < pInput.mapData.size()
+        && pPos.j >= 0 && pPos.j < pInput.mapData[pPos.i].size();
+}
+
 num count_skips_all(const data &pInput, const num maxDist) {
     std::unordered_map<num, num> skip_count;
 
@@ -147,8 +152,12 @@ num count_skips_all(const data &pInput, const num maxDist) {
         for (num j = 1; j < pInput.mapData[i].size() - 1; j++) {
             const cell &first = pInput.mapData[i][j];
 
-            for (num i2 = 1; i2 < pInput.mapData.size() - 1; i2++) {
-                for (num j2 = 1; j2 < pInput.mapData[i2].size() - 1; j2++) {
+            for (num i2 = i - maxDist; i2 <= i + maxDist; i2++) {
+                for (num j2 = j - maxDist; j2 <= j + maxDist; j2++) {
+                    if (!valid(pInput, { i2, j2 })) {
+                        continue;
+                    }
+
                     num dist = std::abs(i2 - i) + std::abs(j2 - j);
                     if (dist > maxDist) {
                         continue;
