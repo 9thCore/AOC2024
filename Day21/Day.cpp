@@ -66,8 +66,8 @@ constexpr num MAX_SIZE = 'z';
 
 typedef std::array<std::array<std::string, MAX_SIZE>, MAX_SIZE> numeric_cache;
 numeric_cache precomputed_cache;
+numeric_cache precomputed_cache_part2;
 
-void preprocess();
 void part1(data);
 void part2(data);
 
@@ -80,7 +80,6 @@ int main()
         input.codes.emplace_back(line);
     }
 
-    preprocess();
     part1(input);
     std::cout << "\n";
     part2(input);
@@ -186,7 +185,18 @@ void iterate_and_get_best_path(const std::string &pPath, const std::function<voi
     }
 }
 
-void preprocess() {
+void preprocess_recursive(std::string &pResult, const std::string &pPath, int pDepthRemaining) {
+    iterate_and_get_best_path(pPath, [&](const std::string &pBest, num) {
+        if (pDepthRemaining == 0) {
+            pResult += pBest;
+        }
+        else {
+            preprocess_recursive(pResult, pBest, pDepthRemaining - 1);
+        }
+        });
+}
+
+void preprocess(numeric_cache &pCache, int pDepth) {
     // Crunch the numbers and calculate the best human move
     //  from each cell to another on the numeric keypad.
     
@@ -196,13 +206,9 @@ void preprocess() {
         for (const char end : keys) {
             bfs(NUMERIC_KEYPAD, start, end, [&](const std::string &pPath, const point &pPosition) {
                 std::string result = "";
-                iterate_and_get_best_path(pPath, [&](const std::string &pBest, num) {
-                    iterate_and_get_best_path(pBest, [&](const std::string &pBest, num) {
-                        result += pBest;
-                        });
-                    });
+                preprocess_recursive(result, pPath, pDepth);
 
-                std::string &previous = precomputed_cache[start][end];
+                std::string &previous = pCache[start][end];
                 if (previous.empty() || previous.length() > result.length()) {
                     previous = result;
                 }
@@ -212,10 +218,10 @@ void preprocess() {
     }
 }
 
-std::string resolve_line(const data &pInput, const data::code &pCode) {
-    std::string result = precomputed_cache['A'][pCode[0]];
+std::string resolve_line(const data &pInput, const numeric_cache &pCache, const data::code &pCode) {
+    std::string result = pCache['A'][pCode[0]];
     for (num i = 1; i < pCode.size(); i++) {
-        result += precomputed_cache[pCode[i - 1]][pCode[i]];
+        result += pCache[pCode[i - 1]][pCode[i]];
     }
     return result;
 }
@@ -223,9 +229,11 @@ std::string resolve_line(const data &pInput, const data::code &pCode) {
 void part1(data pInput) {
     num result = 0;
 
+    preprocess(precomputed_cache, 1);
+
     for (const auto &code : pInput.codes) {
         num value = std::stoll(code);
-        std::string resolved = resolve_line(pInput, code);
+        std::string resolved = resolve_line(pInput, precomputed_cache, code);
         num length = resolved.length();
         result += length * value;
     }
