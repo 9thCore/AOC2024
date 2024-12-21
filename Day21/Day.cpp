@@ -5,7 +5,6 @@
 #include <vector>
 #include <queue>
 #include <array>
-#include <unordered_set>
 #include <unordered_map>
 #include <functional>
 std::ifstream fin("input.txt");
@@ -100,11 +99,9 @@ bool find_in_keypad(const keypad &pKeys, const char pTargetCharacter, point &pPo
 
 void bfs(const keypad &pKeys, const point &pStart, const point &pTarget, std::function<void(const std::string &, const point &)> pCallback) {
     struct node {
-        typedef std::unordered_set<point, point::hash> set;
-
         const std::string path;
         point pos;
-        set visited;
+        num dist, idx;
     };
 
     if (pStart == pTarget) {
@@ -112,16 +109,20 @@ void bfs(const keypad &pKeys, const point &pStart, const point &pTarget, std::fu
         return;
     }
 
-    num maxDist = std::abs(pStart.i - pTarget.i) + std::abs(pStart.j - pTarget.j) + 1;
+    num global_idx = 1;
+    std::array<std::array<uint64_t, 10>, 10> visited = { {0} };
+
+    num maxDist = std::abs(pStart.i - pTarget.i) + std::abs(pStart.j - pTarget.j);
 
     std::queue<node> queue;
-    queue.push({ "", pStart, {pStart} });
+    queue.push({ "", pStart, 0, global_idx++ });
+    visited[pStart.i][pStart.j] = 1;
 
     while (!queue.empty()) {
         node data = queue.front();
         queue.pop();
 
-        if (data.visited.size() > maxDist) {
+        if (data.dist > maxDist) {
             continue;
         }
 
@@ -132,13 +133,18 @@ void bfs(const keypad &pKeys, const point &pStart, const point &pTarget, std::fu
 
         for (int dir = 0; dir < 4; dir++) {
             point next = { data.pos.i + DELTA[dir].i, data.pos.j + DELTA[dir].j };
-            if (pKeys[next.i][next.j] == '#' || data.visited.find(next) != data.visited.end()) {
+            if (pKeys[next.i][next.j] == '#' || (visited[next.i][next.j] & data.idx)) {
                 continue;
             }
 
-            node::set copy(data.visited);
-            copy.insert(next);
-            queue.push({ data.path + MOVE[dir], next, copy });
+            for (auto &v : visited) {
+                for (auto &c : v) {
+                    if (c & data.idx) {
+                        c |= global_idx;
+                    }
+                }
+            }
+            queue.push({ data.path + MOVE[dir], next, data.dist + 1, global_idx++ });
         }
     }
 }
@@ -242,5 +248,16 @@ void part1(data pInput) {
 }
 
 void part2(data pInput) {
-    // dummy
+    num result = 0;
+
+    preprocess(precomputed_cache_part2, 24);
+
+    for (const auto &code : pInput.codes) {
+        num value = std::stoll(code);
+        std::string resolved = resolve_line(pInput, precomputed_cache_part2, code);
+        num length = resolved.length();
+        result += length * value;
+    }
+
+    std::cout << "part 2: " << result;
 }
