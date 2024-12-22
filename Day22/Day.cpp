@@ -5,6 +5,7 @@
 #include <vector>
 #include <deque>
 #include <array>
+#include <chrono>
 std::ifstream fin("input.txt");
 
 typedef long long num;
@@ -26,9 +27,14 @@ int main()
         input.push_back(std::stoll(line));
     }
 
+    auto start = std::chrono::high_resolution_clock::now();
+
     part1(input);
     std::cout << "\n";
     part2(input);
+
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::cout << "\nTotal time: " << std::chrono::duration_cast<std::chrono::milliseconds>(finish - start).count() << " milliseconds.";
 }
 
 void mix(num &pSecretNumber, num pValue) {
