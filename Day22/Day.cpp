@@ -77,7 +77,7 @@ num calculate_change(num pLast, num pCurrent) {
     return pCurrent % 10 - pLast % 10;
 }
 
-window_hash get_value(window &pDeque) {
+window_hash get_value(const window &pWindow, int pIndex) {
     // Assume the change will always be
     //  in the range [-9, 9], so
     //  pack it into 5 bits:
@@ -86,8 +86,7 @@ window_hash get_value(window &pDeque) {
     // -2: 01011, ...
     // -6: 01111, -7: 10000,
     // -8: 10001, -9: 10010
-    num val = pDeque.back();
-    pDeque.pop_back();
+    num val = pWindow[pIndex];
     if (val < 0) {
         return 9 - val;
     }
@@ -96,11 +95,11 @@ window_hash get_value(window &pDeque) {
 
 // 20 bit number that represents
 //  a given sequence, uniquely.
-window_hash hash_window(window pWindow) {
-    return get_value(pWindow)
-        | (get_value(pWindow) << 5)
-        | (get_value(pWindow) << 10)
-        | (get_value(pWindow) << 15);
+window_hash hash_window(const window &pWindow) {
+    return get_value(pWindow, 0)
+        | (get_value(pWindow, 1) << 5)
+        | (get_value(pWindow, 2) << 10)
+        | (get_value(pWindow, 3) << 15);
 }
 
 // Maps a sequence of changes to
