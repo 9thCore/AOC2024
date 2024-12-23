@@ -11,10 +11,27 @@ std::ifstream fin("input.txt");
 typedef long long num;
 
 struct data {
-    typedef std::string computer;
+    struct computer {
+        struct hasher {
+            std::size_t operator()(const computer &pComputer) const {
+                return pComputer.hash;
+            }
+        };
 
-    typedef std::unordered_set<computer> connections;
-    typedef std::unordered_map<computer, connections> lan;
+        const std::string identifier;
+        std::size_t hash;
+
+        computer(const std::string &pIdentifier) : identifier(pIdentifier) {
+            hash = (std::size_t)(identifier[0] - 'a') * 27 + (std::size_t)(identifier[1] - 'a');
+        }
+
+        bool operator==(const computer &pRHS) const {
+            return hash == pRHS.hash;
+        }
+    };
+
+    typedef std::unordered_set<computer, computer::hasher> connections;
+    typedef std::unordered_map<computer, connections, computer::hasher> lan;
 
     lan lanParty;
     connections computers;
@@ -79,26 +96,24 @@ void part1(data pInput) {
     num result = 0;
 
     for (const auto &computer_a : pInput.computers) {
-        for (const auto &computer_b : pInput.computers) {
-            for (const auto &computer_c : pInput.computers) {
+        for (const auto &computer_b : pInput.lanParty[computer_a]) {
+            for (const auto &computer_c : pInput.lanParty[computer_b]) {
 
                 // Filter out tuples without the Historian's computer
-                if (computer_a[0] != 't'
-                    && computer_b[0] != 't'
-                    && computer_c[0] != 't') {
+                if (computer_a.identifier[0] != 't'
+                    && computer_b.identifier[0] != 't'
+                    && computer_c.identifier[0] != 't') {
                     continue;
                 }
 
-                if (pInput.connected(computer_a, computer_b)
-                    && pInput.connected(computer_b, computer_c)
-                    && pInput.connected(computer_c, computer_a)) {
+                if (pInput.connected(computer_a, computer_c)) {
                     result++;
                 }
             }
         }
     }
 
-    // We end up calculating permutations too,
+    // We end up counting permutations too,
     //  so divide by 3!
     result /= 1 * 2 * 3;
 
